@@ -13,11 +13,11 @@ func Init() *gorm.DB {
 	godotenv.Load(".env")
 	host := os.Getenv("DBHOST")
 	user := os.Getenv("DBUSER")
-	port := os.Getenv("DBPORT")
+	// port := os.Getenv("DBPORT")
 	pass := os.Getenv("DBPASS")
 	name := os.Getenv("DBNAME")
 
-	dbURL := host + "://" + user + ":" + pass + "@localhost:" + port + "/" + name
+	dbURL := "postgres://"+ user + ":" + pass + "@" + host + "/" + name
 
 	db, err := gorm.Open(postgres.Open(dbURL), &gorm.Config{})
 
