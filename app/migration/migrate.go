@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitMigrationMysql(db *gorm.DB) {
+func InitMigration(db *gorm.DB) {
 	db.AutoMigrate(&users.Users{})
 	db.AutoMigrate(&products.Products{})
 }

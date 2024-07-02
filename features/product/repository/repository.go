@@ -118,7 +118,7 @@ func (productRepo *productsRepository) ReadAllProduct() ([]entity.ProductsCore, 
 	return mapData, nil
 }
 
-// UpdateEvent implements entity.ProductsDataInterface.
+// UpdateProduct implements entity.ProductsDataInterface.
 func (productRepo *productsRepository) UpdateProduct(id string, data entity.ProductsCore, image *multipart.FileHeader) (product entity.ProductsCore, err error) {
 	var productData model.Products
 	errData := productRepo.db.Where("id = ?", id).First(&productData).Error
@@ -134,49 +134,42 @@ func (productRepo *productsRepository) UpdateProduct(id string, data entity.Prod
 		return entity.ProductsCore{}, err
 	}
 
-	// imageURL, uploadErr := storage.UploadPoster(image)
-	// if uploadErr != nil {
-	// 	return entity.ProductsCore{}, uploadErr
-	// }
+	var imageURL string
+	if image != nil {
+		// Open the file
+		file, err := image.Open()
+		if err != nil {
+			return entity.ProductsCore{}, err
+		}
+		defer file.Close()
 
-	// if uploadErr != nil {
-	// 	return entity.ProductsCore{}, uploadErr
-	// }
-
-	file, err := image.Open()
-	if err != nil {
-		return entity.ProductsCore{}, err
+		// Upload the image to Cloudinary
+		imageURL, err = cloudinary.UploadToCloudinary(file, image.Filename)
+		if err != nil {
+			return entity.ProductsCore{}, err
+		}
+	} else {
+		// Use existing image if no new image is uploaded
+		imageURL = productData.Product_image
 	}
-	defer file.Close()
 
-	imageURL, err := cloudinary.UploadToCloudinary(file, image.Filename)
-	if err != nil {
-		return entity.ProductsCore{}, err
-	}
-	data.Product_image = imageURL
-
+	// Set the new product data
 	productData.ID = uuidID
-	productData.Product_image = data.Product_image
+	productData.Product_image = imageURL
 	productData.Product_name = data.Product_name
 	productData.Description = data.Description
 	productData.Price = data.Price
 	productData.Quantity = data.Quantity
 	productData.UpdatedAt = data.UpdatedAt
 
-	var update = model.Products{
-		Product_image: productData.Product_image,
-		Product_name:  productData.Product_name,
-		Description:   productData.Description,
-		Price:         productData.Price,
-		Quantity:      productData.Quantity,
+	// Update the product in the database
+	errSave := productRepo.db.Save(&productData).Error
+	if errSave != nil {
+		return entity.ProductsCore{}, errSave
 	}
 
-	errSave := productRepo.db.Save(&update)
-	if errData != nil {
-		return entity.ProductsCore{}, errSave.Error
-	}
-
-	eventCore := entity.ProductsCore{
+	// Create the response product core
+	productCore := entity.ProductsCore{
 		ID:            productData.ID.String(),
 		Product_image: productData.Product_image,
 		Product_name:  productData.Product_name,
@@ -187,27 +180,30 @@ func (productRepo *productsRepository) UpdateProduct(id string, data entity.Prod
 		UpdatedAt:     productData.UpdatedAt,
 	}
 
-	return eventCore, nil
-
+	return productCore, nil
 }
+
 
 // DeleteEvents implements entity.ProductsDataInterface.
 func (productRepo *productsRepository) DeleteProduct(id string) (err error) {
 	var checkId model.Products
+	println("id dari repo " + id)
 
-	dataId := productRepo.db.Where("id = ?", id).First(&checkId)
-	if dataId != nil {
-		return errors.New("product not found")
-	}
+	// dataId := productRepo.db.Where("id = ?", id).First(&checkId)
+	// if dataId != nil {
+	// 	return errors.New("product not found")
+	// }
 
 	errData := productRepo.db.Where("id = ?", id).Delete(&checkId)
-	if errData != nil {
-		return errData.Error
-	}
-
+	
 	if errData.RowsAffected == 0 {
 		return errors.New("data not found")
 	}
 
+	if errData != nil {
+		return errData.Error
+	}
+
+	
 	return nil
 }

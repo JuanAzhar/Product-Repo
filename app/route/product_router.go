@@ -16,7 +16,7 @@ func InitProductRouter(db *gorm.DB, e *echo.Echo) {
 	productController := handler.New(productUseCase)
 
 	e.POST("/product", productController.PostProduct, m.JWTMiddleware())
-	e.GET("/product/:id", productController.ReadSpecificProduct, m.JWTMiddleware())
+	e.GET("/product/:id", productController.ReadSpecificProduct)
 	e.GET("/product", productController.ReadAllProduct)
 	e.DELETE("/product/:id", productController.DeleteProduct, m.JWTMiddleware())
 	e.PUT("/product/:id", productController.UpdateProduct, m.JWTMiddleware())

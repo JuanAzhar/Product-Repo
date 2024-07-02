@@ -36,7 +36,9 @@ func (userRepo *userRepository) DeleteUser(id string) (err error) {
 func (userRepo *userRepository) Login(email string, password string) (entity.UserCore, string, error) {
 	var data model.Users
 
-	tx := userRepo.db.Where("email=? AND password=?", email, password).First(&data)
+	bcrypt.CheckPasswordHash(data.Password,password)
+
+	tx := userRepo.db.Where("email=?", email).First(&data)
 	if tx.Error != nil {
 		return entity.UserCore{}, "", tx.Error
 	}

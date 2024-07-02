@@ -2,23 +2,26 @@ package main
 
 import (
 	"fmt"
-	"product-rest-api/app/config"
+	"os"
 	"product-rest-api/app/database"
 	"product-rest-api/app/migration"
 	"product-rest-api/app/route"
+	"strconv"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 )
 
 func main() {
-	cfg := config.InitConfig()
-	db := database.InitDBMysql(cfg)
-	migration.InitMigrationMysql(db)
+	godotenv.Load(".env")
+	port, _ := strconv.Atoi(os.Getenv("SERVERPORT"))
+	db := database.Init()
+	migration.InitMigration(db)
 
 	e := echo.New()
 
 	route.InitUserRouter(db, e)
 	route.InitProductRouter(db, e)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", cfg.SERVERPORT)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
 }

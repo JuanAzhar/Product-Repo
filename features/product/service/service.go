@@ -38,13 +38,14 @@ func (productUC *productUsecase) ReadSpecificProduct(id string) (product entity.
 
 // DeleteProduct implements entity.ProductsUseCaseInterface.
 func (productUC *productUsecase) DeleteProduct(id string) (err error) {
+	println("id dari service " + id)
 	if id == "" {
 		return errors.New("product not found")
 	}
 
 	errEvent := productUC.productRepository.DeleteProduct(id)
 	if errEvent != nil {
-		return errors.New("can't delete product")
+		return errors.New("can't delete product " + errEvent.Error())
 	}
 
 	return nil

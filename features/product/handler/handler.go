@@ -113,7 +113,7 @@ func (handler *productController) UpdateProduct(c echo.Context) error {
 
 	if userId == "" {
 		return c.JSON(http.StatusBadRequest, map[string]any{
-			"message": "error get userId, login first, login first",
+			"message": "error get userId, login first",
 		})
 	}
 
@@ -126,20 +126,33 @@ func (handler *productController) UpdateProduct(c echo.Context) error {
 		})
 	}
 
-	image, err := c.FormFile("Image")
-	if err != nil {
-		if err == http.ErrMissingFile {
-			return c.JSON(http.StatusBadRequest, map[string]interface{}{
-				"message": "No file uploaded",
-			})
-		}
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"message": "Error uploading file",
-		})
-	}
+	// Retrieve the existing product data
+    existingProduct, err := handler.productUsecase.ReadSpecificProduct(idParams)
+    if err != nil {
+        return c.JSON(http.StatusBadRequest, map[string]interface{}{
+            "message": "Error retrieving existing product",
+        })
+    }
+
+    var productImage string
+    image, err := c.FormFile("Image")
+    if err != nil {
+        if err == http.ErrMissingFile {
+            // Use existing image if no new image is uploaded
+            productImage = existingProduct.Product_image
+        } else {
+            return c.JSON(http.StatusBadRequest, map[string]interface{}{
+                "message": "Error uploading file",
+            })
+        }
+    } else {
+        // Process the uploaded image
+        productImage = data.Product_image // Assuming data.Product_image contains the path to the new image
+    }
+
 
 	productData := entity.ProductsCore{
-		Product_image: data.Product_image,
+		Product_image: productImage,
 		Product_name:  data.Product_name,
 		Description:   data.Description,
 		Quantity:      data.Quantity,
@@ -170,10 +183,11 @@ func (handler *productController) DeleteProduct(c echo.Context) error {
 	}
 
 	idParams := c.Param("id")
+	println("id dari handler "+idParams)
 	err := handler.productUsecase.DeleteProduct(idParams)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
-			"message": "Error deleting product",
+			"message": "Error deleting product " + err.Error(),
 		})
 	}
 

@@ -23,7 +23,7 @@ func (userUC *userUseCase) DeleteUser(id string) (err error) {
 		return errors.New("insert user id")
 	}
 
-	userData, err := userUC.ReadSpecificUser(id)
+	userData, err := userUC.userRepository.ReadSpecificUser(id)
 	if err != nil{
 		return errors.New("user not found")
 	}
@@ -46,7 +46,7 @@ func (userUC *userUseCase) Login(email string, password string) (entity.UserCore
 		return entity.UserCore{}, "", errors.New("error, email or password can't be empty")
 	}
 
-	loginData, token, err := userUC.Login(email,password)
+	loginData, token, err := userUC.userRepository.Login(email,password)
 	if err != nil {
 		return entity.UserCore{}, "", err
 	}
@@ -70,7 +70,7 @@ func (userUC *userUseCase) Register(data entity.UserCore) (row int, err error) {
 		return 0, errors.New("error. email format not valid")
 	}
 
-	errRegister, err := userUC.Register(data)
+	errRegister, err := userUC.userRepository.Register(data)
 	if err != nil {
 		return 0, err
 	}
