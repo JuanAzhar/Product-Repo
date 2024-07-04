@@ -19,6 +19,7 @@ func main() {
 	migration.InitMigration(db)
 
 	e := echo.New()
+	e.Use(middleware.CORS())
 
 	route.InitUserRouter(db, e)
 	route.InitProductRouter(db, e)
